@@ -1,8 +1,11 @@
+import urllib
+import urlparse
 from slumber import exceptions
 
 SERIALIZERS = {
     "json": True,
     "yaml": True,
+    "formdata": True,
 }
 
 try:
@@ -60,11 +63,25 @@ class YamlSerializer(BaseSerializer):
         return yaml.dump(data)
 
 
+class FormDataSerializer(BaseSerializer):
+
+    content_type = 'application/x-www-form-urlencoded'
+
+    def loads(self, data):
+        result = urlparse.parse_qs(data)
+        return result
+
+    def dumps(self, data):
+        result = urllib.urlencode(data)
+        return result
+
+
 class Serializer(object):
 
     _serializers = {
         "json": JsonSerializer(),
         "yaml": YamlSerializer(),
+        "formdata": FormDataSerializer(),
     }
 
     def __init__(self, default_format="json"):

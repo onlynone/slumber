@@ -89,16 +89,25 @@ class Resource(ResourceAttributesMixin, object):
         return self.__class__(**kwargs)
 
     def get_serializer(self):
+        return self.get_output_serializer()
+
+    def get_output_serializer(self):
         return Serializer(default_format=self._store["format"])
 
+    def get_input_serializer(self):
+        return Serializer(default_format=self._store["input_format"])
+
     def _request(self, method, data=None, params=None):
-        s = self.get_serializer()
+        input_serializer = self.get_input_serializer()
+        input_type = input_serializer.get_content_type()
+        output_serializer = self.get_output_serializer()
+        output_type = output_serializer.get_content_type()
         url = self._store["base_url"]
 
         if self._store["append_slash"] and not url.endswith("/"):
             url = url + "/"
 
-        resp = self._store["session"].request(method, url, data=data, params=params, headers={"content-type": s.get_content_type(), "accept": s.get_content_type()})
+        resp = self._store["session"].request(method, url, data=data, params=params, headers={"content-type": input_type, "accept": output_type})
 
         if 400 <= resp.status_code <= 499:
             raise exceptions.HttpClientError("Client Error %s: %s" % (resp.status_code, url), response=resp, content=resp.content)
@@ -108,7 +117,7 @@ class Resource(ResourceAttributesMixin, object):
         return resp
 
     def get(self, **kwargs):
-        s = self.get_serializer()
+        s = self.get_output_serializer()
 
         resp = self._request("GET", params=kwargs)
         if 200 <= resp.status_code <= 299:
@@ -120,7 +129,7 @@ class Resource(ResourceAttributesMixin, object):
             return  # @@@ We should probably do some sort of error here? (Is this even possible?)
 
     def post(self, data, **kwargs):
-        s = self.get_serializer()
+        s = self.get_input_serializer()
 
         resp = self._request("POST", data=s.dumps(data), params=kwargs)
         if 200 <= resp.status_code <= 299:
@@ -135,9 +144,9 @@ class Resource(ResourceAttributesMixin, object):
             return
 
     def put(self, data, **kwargs):
-        s = self.get_serializer()
+        s = self.get_input_serializer()
 
-        resp = self._request("PUT", data=s.dumps(data), params=kwargs)
+        resp = self._request("PUT", data=s.dumps(data), params=kwargs, content_type=s.get_content_type())
         if 200 <= resp.status_code <= 299:
             if resp.status_code == 204:
                 return True
@@ -159,10 +168,11 @@ class Resource(ResourceAttributesMixin, object):
 
 class API(ResourceAttributesMixin, object):
 
-    def __init__(self, base_url=None, auth=None, format=None, append_slash=True, session=None):
+    def __init__(self, base_url=None, auth=None, format=None, input_format=None, append_slash=True, session=None):
         self._store = {
             "base_url": base_url,
             "format": format if format is not None else "json",
+            "input_format": input_format if input_format is not None else "json",
             "append_slash": append_slash,
             "session": requests.session(auth=auth) if session is None else session,
         }
