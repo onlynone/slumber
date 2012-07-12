@@ -146,7 +146,7 @@ class Resource(ResourceAttributesMixin, object):
     def put(self, data, **kwargs):
         s = self.get_input_serializer()
 
-        resp = self._request("PUT", data=s.dumps(data), params=kwargs, content_type=s.get_content_type())
+        resp = self._request("PUT", data=s.dumps(data), params=kwargs)
         if 200 <= resp.status_code <= 299:
             if resp.status_code == 204:
                 return True
