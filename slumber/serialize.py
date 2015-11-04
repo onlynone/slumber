@@ -1,8 +1,11 @@
+import urllib
+import urlparse
 from slumber import exceptions
 
 _SERIALIZERS = {
     "json": True,
     "yaml": True,
+    "formdata": True,
 }
 
 try:
@@ -63,6 +66,20 @@ class YamlSerializer(BaseSerializer):
         return yaml.dump(data)
 
 
+class FormDataSerializer(BaseSerializer):
+
+    content_types = ['application/x-www-form-urlencoded']
+    key = "formdata"
+
+    def loads(self, data):
+        result = urlparse.parse_qs(data)
+        return result
+
+    def dumps(self, data):
+        result = urllib.urlencode(data)
+        return result
+
+
 class Serializer(object):
 
     def __init__(self, default=None, serializers=None):
@@ -70,7 +87,7 @@ class Serializer(object):
             default = "json" if _SERIALIZERS["json"] else "yaml"
 
         if serializers is None:
-            serializers = [x() for x in [JsonSerializer, YamlSerializer] if _SERIALIZERS[x.key]]
+            serializers = [x() for x in [JsonSerializer, YamlSerializer, FormDataSerializer] if _SERIALIZERS[x.key]]
 
         if not serializers:
             raise exceptions.SerializerNoAvailable("There are no Available Serializers.")

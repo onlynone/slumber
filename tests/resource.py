@@ -12,7 +12,7 @@ from slumber import exceptions
 class ResourceTestCase(unittest.TestCase):
 
     def setUp(self):
-        self.base_resource = slumber.Resource(base_url="http://example/api/v1/test", format="json", append_slash=False)
+        self.base_resource = slumber.Resource(base_url="http://example/api/v1/test", format="json", input_format="json", append_slash=False)
 
     def test_get_200_json(self):
         r = mock.Mock(spec=requests.Response)
@@ -23,6 +23,7 @@ class ResourceTestCase(unittest.TestCase):
         self.base_resource._store.update({
             "session": mock.Mock(spec=requests.Session),
             "serializer": slumber.serialize.Serializer(),
+            "input_serializer": slumber.serialize.Serializer(),
         })
         self.base_resource._store["session"].request.return_value = r
 
@@ -52,6 +53,7 @@ class ResourceTestCase(unittest.TestCase):
         self.base_resource._store.update({
             "session": mock.Mock(spec=requests.Session),
             "serializer": slumber.serialize.Serializer(),
+            "input_serializer": slumber.serialize.Serializer(),
         })
         self.base_resource._store["session"].request.return_value = r
 
@@ -81,6 +83,7 @@ class ResourceTestCase(unittest.TestCase):
         self.base_resource._store.update({
             "session": mock.Mock(spec=requests.Session),
             "serializer": slumber.serialize.Serializer(),
+            "input_serializer": slumber.serialize.Serializer(),
         })
         self.base_resource._store["session"].request.return_value = r
 
@@ -114,6 +117,7 @@ class ResourceTestCase(unittest.TestCase):
         self.base_resource._store.update({
             "session": mock.Mock(spec=requests.Session),
             "serializer": slumber.serialize.Serializer(),
+            "input_serializer": slumber.serialize.Serializer(),
         })
         self.base_resource._store["session"].request.return_value = r
 
@@ -149,6 +153,7 @@ class ResourceTestCase(unittest.TestCase):
         self.base_resource._store.update({
             "session": mock.Mock(spec=requests.Session),
             "serializer": slumber.serialize.Serializer(),
+            "input_serializer": slumber.serialize.Serializer(),
         })
         self.base_resource._store["session"].request.side_effect = (r1, r2)
 
@@ -178,6 +183,7 @@ class ResourceTestCase(unittest.TestCase):
         self.base_resource._store.update({
             "session": mock.Mock(spec=requests.Session),
             "serializer": slumber.serialize.Serializer(),
+            "input_serializer": slumber.serialize.Serializer(),
         })
         self.base_resource._store["session"].request.return_value = r
 
@@ -212,6 +218,7 @@ class ResourceTestCase(unittest.TestCase):
         self.base_resource._store.update({
             "session": mock.Mock(spec=requests.Session),
             "serializer": slumber.serialize.Serializer(),
+            "input_serializer": slumber.serialize.Serializer(),
         })
         self.base_resource._store["session"].request.side_effect = (r1, r2)
 
@@ -241,6 +248,7 @@ class ResourceTestCase(unittest.TestCase):
         self.base_resource._store.update({
             "session": mock.Mock(spec=requests.Session),
             "serializer": slumber.serialize.Serializer(),
+            "input_serializer": slumber.serialize.Serializer(),
         })
         self.base_resource._store["session"].request.return_value = r
 
@@ -275,6 +283,7 @@ class ResourceTestCase(unittest.TestCase):
         self.base_resource._store.update({
             "session": mock.Mock(spec=requests.Session),
             "serializer": slumber.serialize.Serializer(),
+            "input_serializer": slumber.serialize.Serializer(),
         })
         self.base_resource._store["session"].request.side_effect = (r1, r2)
 
@@ -304,6 +313,7 @@ class ResourceTestCase(unittest.TestCase):
         self.base_resource._store.update({
             "session": mock.Mock(spec=requests.Session),
             "serializer": slumber.serialize.Serializer(),
+            "input_serializer": slumber.serialize.Serializer(),
         })
         self.base_resource._store["session"].request.return_value = r
 
@@ -327,6 +337,7 @@ class ResourceTestCase(unittest.TestCase):
     def test_handle_serialization(self):
         self.base_resource._store.update({
             "serializer": slumber.serialize.Serializer(),
+            "input_serializer": slumber.serialize.Serializer(),
         })
 
         resp = mock.Mock(spec=requests.Response)
@@ -348,6 +359,7 @@ class ResourceTestCase(unittest.TestCase):
         self.base_resource._store.update({
             "session": mock.Mock(spec=requests.Session),
             "serializer": slumber.serialize.Serializer(),
+            "input_serializer": slumber.serialize.Serializer(),
         })
 
         self.base_resource._store["session"].request.return_value = resp
@@ -363,6 +375,7 @@ class ResourceTestCase(unittest.TestCase):
         self.base_resource._store.update({
             "session": mock.Mock(spec=requests.Session),
             "serializer": slumber.serialize.Serializer(),
+            "input_serializer": slumber.serialize.Serializer(),
         })
         self.base_resource._store["session"].request.return_value = r
 
@@ -396,6 +409,7 @@ class ResourceTestCase(unittest.TestCase):
         self.base_resource._store.update({
             "session": mock.Mock(spec=requests.Session),
             "serializer": slumber.serialize.Serializer(),
+            "input_serializer": slumber.serialize.Serializer(),
         })
 
         self.base_resource._store["session"].request.return_value = r
@@ -413,6 +427,7 @@ class ResourceTestCase(unittest.TestCase):
         self.base_resource._store.update({
             "session": mock.Mock(spec=requests.Session),
             "serializer": slumber.serialize.Serializer(),
+            "input_serializer": slumber.serialize.Serializer(),
         })
         self.base_resource._store["session"].request.return_value = r
 
@@ -428,6 +443,7 @@ class ResourceTestCase(unittest.TestCase):
         self.base_resource._store.update({
             "session": mock.Mock(spec=requests.Session),
             "serializer": slumber.serialize.Serializer(),
+            "input_serializer": slumber.serialize.Serializer(),
         })
         self.base_resource._store["session"].request.return_value = r
 
@@ -474,6 +490,7 @@ class ResourceTestCase(unittest.TestCase):
         self.base_resource._store.update({
             "session": mock.Mock(spec=requests.Session),
             "serializer": slumber.serialize.Serializer(),
+            "input_serializer": slumber.serialize.Serializer(),
         })
         self.base_resource._store["session"].request.return_value = r
 
@@ -523,6 +540,7 @@ class ResourceTestCase(unittest.TestCase):
         self.base_resource._store.update({
             "session": mock.Mock(spec=requests.Session),
             "serializer": slumber.serialize.Serializer(),
+            "input_serializer": slumber.serialize.Serializer(),
         })
         self.base_resource._store["session"].request.return_value = r
 

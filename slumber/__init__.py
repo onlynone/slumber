@@ -53,7 +53,7 @@ class Resource(ResourceAttributesMixin, object):
     def __init__(self, *args, **kwargs):
         self._store = kwargs
 
-    def __call__(self, id=None, format=None, url_override=None):
+    def __call__(self, id=None, format=None, input_format=None, url_override=None):
         """
         Returns a new instance of self modified by one or more of the available
         parameters. These allows us to do things like override format for a
@@ -62,7 +62,7 @@ class Resource(ResourceAttributesMixin, object):
         """
 
         # Short Circuit out if the call is empty
-        if id is None and format is None and url_override is None:
+        if id is None and format is None and input_format is None and url_override is None:
             return self
 
         kwargs = copy_kwargs(self._store)
@@ -72,6 +72,9 @@ class Resource(ResourceAttributesMixin, object):
 
         if format is not None:
             kwargs["format"] = format
+
+        if input_format is not None:
+            kwargs["input_format"] = input_format
 
         if url_override is not None:
             # @@@ This is hacky and we should probably figure out a better way
@@ -84,15 +87,18 @@ class Resource(ResourceAttributesMixin, object):
         return self._get_resource(**kwargs)
 
     def _request(self, method, data=None, files=None, params=None):
-        serializer = self._store["serializer"]
+        input_serializer = self._store["input_serializer"]
+        input_type = input_serializer.get_content_type()
+        output_serializer = self._store["serializer"]
+        output_type = output_serializer.get_content_type()
         url = self.url()
 
-        headers = {"accept": serializer.get_content_type()}
+        headers = {"accept": output_type}
 
         if not files:
-            headers["content-type"] = serializer.get_content_type()
+            headers["content-type"] = input_type
             if data is not None:
-                data = serializer.dumps(data)
+                data = input_serializer.dumps(data)
 
         resp = self._store["session"].request(method, url, data=data, params=params, files=files, headers=headers)
 
@@ -193,9 +199,12 @@ class API(ResourceAttributesMixin, object):
 
     resource_class = Resource
 
-    def __init__(self, base_url=None, auth=None, format=None, append_slash=True, session=None, serializer=None):
+    def __init__(self, base_url=None, auth=None, format=None, input_format=None, append_slash=True, session=None, serializer=None, input_serializer=None):
         if serializer is None:
             serializer = Serializer(default=format)
+
+        if input_serializer is None:
+            input_serializer = Serializer(default=input_format)
 
         if session is None:
             session = requests.session()
@@ -206,9 +215,11 @@ class API(ResourceAttributesMixin, object):
         self._store = {
             "base_url": base_url,
             "format": format if format is not None else "json",
+            "input_format": input_format if input_format is not None else "json",
             "append_slash": append_slash,
             "session": session,
             "serializer": serializer,
+            "input_serializer": input_serializer,
         }
 
         # Do some Checks for Required Values

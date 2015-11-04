@@ -42,3 +42,24 @@ class ResourceTestCase(unittest.TestCase):
         result = serializer.dumps(self.data)
         self.assertEqual(result, "{foo: bar}\n")
         self.assertEqual(self.data, serializer.loads(result))
+
+    def test_formdata_get_serializer(self):
+        s = slumber.serialize.Serializer()
+
+        serializer = None
+        for content_type in [
+            "application/x-www-form-urlencoded",
+        ]:
+            serializer = s.get_serializer(content_type=content_type)
+            self.assertEqual(type(serializer), slumber.serialize.FormDataSerializer,
+                             "content_type %s should produce a FormDataSerializer")
+
+        result = serializer.dumps(self.data)
+        self.assertEqual(result, "foo=bar")
+
+        # The following would currently fail because parsing a query string
+        # leads to the values being lists instead of single items so you get:
+        #
+        #     {'foo': ['bar']}
+        #
+        # self.assertEqual(self.data, serializer.loads(result))
