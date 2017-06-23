@@ -1,5 +1,8 @@
-import urllib
-import urlparse
+try:
+    from urllib.parse import urlencode, parse_qs
+except ImportError:
+    from urllib import urlencode
+    from urlparse import parse_qs
 from slumber import exceptions
 
 _SERIALIZERS = {
@@ -72,11 +75,11 @@ class FormDataSerializer(BaseSerializer):
     key = "formdata"
 
     def loads(self, data):
-        result = urlparse.parse_qs(data)
+        result = parse_qs(data)
         return result
 
     def dumps(self, data):
-        result = urllib.urlencode(data)
+        result = urlencode(data)
         return result
 
 
