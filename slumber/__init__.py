@@ -96,8 +96,8 @@ class Resource(ResourceAttributesMixin, object):
         headers = {"accept": output_type}
 
         if not files:
-            headers["content-type"] = input_type
             if data is not None:
+                headers["content-type"] = input_type
                 data = input_serializer.dumps(data)
 
         resp = self._store["session"].request(method, url, data=data, params=params, files=files, headers=headers)
@@ -141,45 +141,42 @@ class Resource(ResourceAttributesMixin, object):
             return resp.content
 
     def _process_response(self, resp):
-        # TODO: something to expose headers and status
-
         if 200 <= resp.status_code <= 299:
-            return self._try_to_serialize_response(resp)
+            decoded = self._try_to_serialize_response(resp)
         else:
-            return  # @@@ We should probably do some sort of error here? (Is this even possible?)
+            # @@@ We should probably do some sort of error here? (Is this even possible?)
+            decoded = None
 
-    def url(self):
-        url = self._store["base_url"]
+        if self._store["raw"]:
+            return (resp, decoded)
 
-        if self._store["append_slash"] and not url.endswith("/"):
-            url = url + "/"
+        return decoded
 
-        return url
-
-    # TODO: refactor these methods - lots of commonality
-    def get(self, **kwargs):
-        resp = self._request("GET", params=kwargs)
+    def _do_verb_request(self, verb, data=None, files=None, params=None):
+        resp = self._request(verb, data=data, files=files, params=params)
         return self._process_response(resp)
+
+    def as_raw(self):
+        self._store["raw"] = True
+        return self
+
+    def get(self, **kwargs):
+        return self._do_verb_request("GET", params=kwargs)
 
     def options(self, **kwargs):
-        resp = self._request("OPTIONS", params=kwargs)
-        return self._process_response(resp)
+        return self._do_verb_request("OPTIONS", params=kwargs)
 
     def head(self, **kwargs):
-        resp = self._request("HEAD", params=kwargs)
-        return self._process_response(resp)
+        return self._do_verb_request("HEAD", params=kwargs)
 
     def post(self, data=None, files=None, **kwargs):
-        resp = self._request("POST", data=data, files=files, params=kwargs)
-        return self._process_response(resp)
+        return self._do_verb_request("POST", data=data, files=files, params=kwargs)
 
     def patch(self, data=None, files=None, **kwargs):
-        resp = self._request("PATCH", data=data, files=files, params=kwargs)
-        return self._process_response(resp)
+        return self._do_verb_request("PATCH", data=data, files=files, params=kwargs)
 
     def put(self, data=None, files=None, **kwargs):
-        resp = self._request("PUT", data=data, files=files, params=kwargs)
-        return self._process_response(resp)
+        return self._do_verb_request("PUT", data=data, files=files, params=kwargs)
 
     def delete(self, **kwargs):
         resp = self._request("DELETE", params=kwargs)
@@ -191,6 +188,15 @@ class Resource(ResourceAttributesMixin, object):
         else:
             return False
 
+    def url(self):
+        url = self._store["base_url"]
+
+        if self._store["append_slash"] and not url.endswith("/"):
+            url = url + "/"
+
+        return url
+
+
     def _get_resource(self, **kwargs):
         return self.__class__(**kwargs)
 
@@ -199,7 +205,9 @@ class API(ResourceAttributesMixin, object):
 
     resource_class = Resource
 
-    def __init__(self, base_url=None, auth=None, format=None, input_format=None, append_slash=True, session=None, serializer=None, input_serializer=None):
+    def __init__(self, base_url=None, auth=None,
+                 format=None, input_format=None, append_slash=True,
+                 session=None, serializer=None, input_serializer=None, raw=False):
         if serializer is None:
             serializer = Serializer(default=format)
 
@@ -220,6 +228,7 @@ class API(ResourceAttributesMixin, object):
             "session": session,
             "serializer": serializer,
             "input_serializer": input_serializer,
+            "raw": raw,
         }
 
         # Do some Checks for Required Values

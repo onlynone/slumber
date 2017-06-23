@@ -12,7 +12,9 @@ from slumber import exceptions
 class ResourceTestCase(unittest.TestCase):
 
     def setUp(self):
-        self.base_resource = slumber.Resource(base_url="http://example/api/v1/test", format="json", input_format="json", append_slash=False)
+        self.base_resource = slumber.Resource(
+                base_url="http://example/api/v1/test", format="json",
+                input_format="json", append_slash=False, raw=False)
 
     def test_get_200_json(self):
         r = mock.Mock(spec=requests.Response)
@@ -38,7 +40,7 @@ class ResourceTestCase(unittest.TestCase):
             data=None,
             files=None,
             params=None,
-            headers={"content-type": self.base_resource._store["serializer"].get_content_type(), "accept": self.base_resource._store["serializer"].get_content_type()}
+            headers={"accept": self.base_resource._store["serializer"].get_content_type()}
         )
 
         resp = self.base_resource.get()
@@ -68,7 +70,7 @@ class ResourceTestCase(unittest.TestCase):
             data=None,
             files=None,
             params=None,
-            headers={"content-type": self.base_resource._store["serializer"].get_content_type(), "accept": self.base_resource._store["serializer"].get_content_type()}
+            headers={"accept": self.base_resource._store["serializer"].get_content_type()}
         )
 
         resp = self.base_resource.get()
@@ -98,8 +100,7 @@ class ResourceTestCase(unittest.TestCase):
             data=None,
             files=None,
             params=None,
-            headers={"content-type": self.base_resource._store["serializer"].get_content_type(),
-                     "accept": self.base_resource._store["serializer"].get_content_type()}
+            headers={"accept": self.base_resource._store["serializer"].get_content_type()}
         )
 
         resp = self.base_resource.options()
@@ -132,8 +133,7 @@ class ResourceTestCase(unittest.TestCase):
             data=None,
             files=None,
             params=None,
-            headers={"content-type": self.base_resource._store["serializer"].get_content_type(),
-                     "accept": self.base_resource._store["serializer"].get_content_type()}
+            headers={"accept": self.base_resource._store["serializer"].get_content_type()}
         )
 
         resp = self.base_resource.head()
@@ -168,7 +168,7 @@ class ResourceTestCase(unittest.TestCase):
             data=None,
             files=None,
             params=None,
-            headers={"content-type": self.base_resource._store["serializer"].get_content_type(), "accept": self.base_resource._store["serializer"].get_content_type()}
+            headers={"accept": self.base_resource._store["serializer"].get_content_type()}
         )
 
         resp = self.base_resource.post(data={'foo': 'bar'})
@@ -198,7 +198,7 @@ class ResourceTestCase(unittest.TestCase):
             data=None,
             files=None,
             params=None,
-            headers={"content-type": self.base_resource._store["serializer"].get_content_type(), "accept": self.base_resource._store["serializer"].get_content_type()}
+            headers={"accept": self.base_resource._store["serializer"].get_content_type()}
         )
 
         resp = self.base_resource.post(data={'foo': 'bar'})
@@ -233,7 +233,7 @@ class ResourceTestCase(unittest.TestCase):
             data=None,
             files=None,
             params=None,
-            headers={"content-type": self.base_resource._store["serializer"].get_content_type(), "accept": self.base_resource._store["serializer"].get_content_type()}
+            headers={"accept": self.base_resource._store["serializer"].get_content_type()}
         )
 
         resp = self.base_resource.patch(data={'foo': 'bar'})
@@ -263,7 +263,7 @@ class ResourceTestCase(unittest.TestCase):
             data=None,
             files=None,
             params=None,
-            headers={"content-type": self.base_resource._store["serializer"].get_content_type(), "accept": self.base_resource._store["serializer"].get_content_type()}
+            headers={"accept": self.base_resource._store["serializer"].get_content_type()}
         )
 
         resp = self.base_resource.patch(data={'foo': 'bar'})
@@ -298,7 +298,7 @@ class ResourceTestCase(unittest.TestCase):
             data=None,
             files=None,
             params=None,
-            headers={"content-type": self.base_resource._store["serializer"].get_content_type(), "accept": self.base_resource._store["serializer"].get_content_type()}
+            headers={"accept": self.base_resource._store["serializer"].get_content_type()}
         )
 
         resp = self.base_resource.put(data={'foo': 'bar'})
@@ -328,7 +328,7 @@ class ResourceTestCase(unittest.TestCase):
             data=None,
             files=None,
             params=None,
-            headers={"content-type": self.base_resource._store["serializer"].get_content_type(), "accept": self.base_resource._store["serializer"].get_content_type()}
+            headers={"accept": self.base_resource._store["serializer"].get_content_type()}
         )
 
         resp = self.base_resource.put(data={'foo': 'bar'})
@@ -390,7 +390,7 @@ class ResourceTestCase(unittest.TestCase):
             data=None,
             files=None,
             params=None,
-            headers={"content-type": self.base_resource._store["serializer"].get_content_type(), "accept": self.base_resource._store["serializer"].get_content_type()}
+            headers={"accept": self.base_resource._store["serializer"].get_content_type()}
         )
 
         resp = self.base_resource.get()
@@ -505,11 +505,95 @@ class ResourceTestCase(unittest.TestCase):
             data=None,
             files=None,
             params=None,
-            headers={"content-type": self.base_resource._store["serializer"].get_content_type(), "accept": self.base_resource._store["serializer"].get_content_type()}
+            headers={"accept": self.base_resource._store["serializer"].get_content_type()}
         )
 
         resp = self.base_resource.get()
         self.assertEqual(resp['result'], ['a', 'b', 'c'])
+
+    def test_get_with_raw(self):
+        r = mock.Mock(spec=requests.Response)
+        r.status_code = 200
+        r.headers = {"content-type": "application/json"}
+        r.content = '{"result": "a"}'
+
+        self.base_resource._store.update({
+            "session": mock.Mock(spec=requests.Session),
+            "serializer": slumber.serialize.Serializer(),
+            "input_serializer": slumber.serialize.Serializer(),
+            "raw": True,
+        })
+        self.base_resource._store["session"].request.return_value = r
+
+        (response, decoded) = self.base_resource.get()
+
+        self.assertIsInstance(response, requests.Response)
+        self.assertEqual(decoded["result"], "a")
+
+    def test_as_raw_resource_get(self):
+        apiurl = "http://example/api/v1"
+        ses = mock.Mock(spec=requests.session())
+        r = mock.Mock(spec=requests.Response)
+        r.status_code = 200
+        r.headers = {}
+        ses.request.return_value = r
+
+        api = slumber.API(apiurl, session=ses)
+
+        (response, _) = api.myresource(1).subresource.as_raw().get()
+        self.assertIsInstance(response, requests.Response)
+
+    def test_all_resource_requests_are_raw_if_set_in_api(self):
+        apiurl = "http://example/api/v1"
+        ses = mock.Mock(spec=requests.session())
+        r = mock.Mock(spec=requests.Response)
+        r.status_code = 200
+        r.headers = {}
+        ses.request.return_value = r
+
+        api = slumber.API(apiurl, session=ses, raw=True)
+
+        (response, _) = api.myresource(1).subresource.get()
+        self.assertIsInstance(response, requests.Response)
+
+        (response, _) = api.myresource(1).get()
+        self.assertIsInstance(response, requests.Response)
+
+    def test_send_content_type_only_if_body_data_exists(self):
+        apiuri = "http://example/api/v1/"
+        newuri = "http://example/api/v1/myresource/"
+        ses = mock.Mock(spec=requests.session())
+        r = mock.Mock(spec=requests.Response)
+        r.status_code = 201
+        r.headers = {}
+        ses.request.return_value = r
+
+        api = slumber.API(apiuri, session=ses)
+
+        # Empty post request
+        api.myresource.post()
+        ses.return_value.status_code = 201
+        ses.return_value.headers = {}
+        self.assertEqual(ses.request.call_count, 1)
+
+        ses.request.assert_called_with('POST', newuri,
+                headers={
+                    'accept': 'application/json'
+                },
+                data=None,
+                files=None,
+                params={})
+
+        api.myresource.post(data=dict(key='value'))
+        self.assertEqual(ses.request.call_count, 2)
+        ses.request.assert_called_with('POST', newuri,
+                headers={
+                    'accept': 'application/json',
+                    'content-type': 'application/json'
+                },
+                data='{"key": "value"}',
+                files=None,
+                params={})
 
     @unittest.expectedFailure
     def test_post_201_does_get(self):
@@ -555,7 +639,7 @@ class ResourceTestCase(unittest.TestCase):
             data=None,
             files=None,
             params=None,
-            headers={"content-type": self.base_resource._store["serializer"].get_content_type(), "accept": self.base_resource._store["serializer"].get_content_type()}
+            headers={"accept": self.base_resource._store["serializer"].get_content_type()}
         )
 
         resp = self.base_resource.post(data={'foo': 'bar'})
